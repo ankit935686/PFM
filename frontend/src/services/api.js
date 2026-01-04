@@ -51,11 +51,24 @@ api.interceptors.response.use(
           return api(originalRequest);
         }
       } catch (refreshError) {
-        // Refresh failed, clear storage and redirect to login
+        // Refresh failed (including 500 errors when user doesn't exist)
+        // Clear storage and redirect to login
         localStorage.removeItem('tokens');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        // Only redirect if not already on a public page
+        if (!window.location.pathname.match(/^\/(login|signup|forgot-password|reset-password)?$/)) {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
+      }
+    }
+
+    // Handle 500 errors on token refresh (user deleted)
+    if (error.response?.status === 500 && error.config?.url?.includes('token/refresh')) {
+      localStorage.removeItem('tokens');
+      localStorage.removeItem('user');
+      if (!window.location.pathname.match(/^\/(login|signup|forgot-password|reset-password)?$/)) {
+        window.location.href = '/login';
       }
     }
 

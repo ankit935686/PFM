@@ -16,9 +16,13 @@ export const AuthProvider = ({ children }) => {
           setUser(response.user);
         } catch (error) {
           console.error('Failed to fetch profile:', error);
-          // Clear invalid tokens
+          // Clear invalid tokens - this handles cases where:
+          // - User was deleted
+          // - Token is expired and refresh failed
+          // - Any other auth error
           localStorage.removeItem('tokens');
           localStorage.removeItem('user');
+          setUser(null);
         }
       }
       setLoading(false);

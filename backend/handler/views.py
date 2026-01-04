@@ -197,6 +197,61 @@ class GoogleAuthView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
 
+class CustomTokenRefreshView(APIView):
+    """
+    Custom token refresh view with better error handling.
+    
+    POST /api/auth/token/refresh/
+    Request body: {refresh} - Refresh token
+    Returns: New access token and optionally new refresh token
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        refresh_token = request.data.get('refresh')
+        
+        if not refresh_token:
+            return Response({
+                'success': False,
+                'message': 'Refresh token is required.',
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            refresh = RefreshToken(refresh_token)
+            
+            # Check if user still exists
+            user_id = refresh.payload.get('user_id')
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({
+                    'success': False,
+                    'message': 'User no longer exists.',
+                    'code': 'user_not_found',
+                }, status=status.HTTP_401_UNAUTHORIZED)
+            
+            # Generate new tokens
+            data = {
+                'access': str(refresh.access_token),
+            }
+            
+            # Rotate refresh token if enabled in settings
+            if getattr(settings, 'SIMPLE_JWT', {}).get('ROTATE_REFRESH_TOKENS', False):
+                refresh.set_jti()
+                refresh.set_exp()
+                refresh.set_iat()
+                data['refresh'] = str(refresh)
+            
+            return Response(data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({
+                'success': False,
+                'message': 'Invalid or expired refresh token.',
+                'code': 'token_invalid',
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+
 class LogoutView(APIView):
     """
     API endpoint for user logout.

@@ -1,10 +1,10 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     SignupView,
     LoginView,
     GoogleAuthView,
     LogoutView,
+    CustomTokenRefreshView,
     UserProfileView,
     ChangePasswordView,
     DashboardView,
@@ -33,7 +33,7 @@ urlpatterns = [
     path('auth/login/', LoginView.as_view(), name='login'),
     path('auth/google/', GoogleAuthView.as_view(), name='google-auth'),
     path('auth/logout/', LogoutView.as_view(), name='logout'),
-    path('auth/token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
+    path('auth/token/refresh/', CustomTokenRefreshView.as_view(), name='token-refresh'),
     
     # Password management endpoints
     path('auth/forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),

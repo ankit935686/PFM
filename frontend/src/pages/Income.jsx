@@ -15,6 +15,15 @@ import {
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
+// Helper to get today's date in local timezone (YYYY-MM-DD format)
+const getLocalDateString = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 // Currency symbols mapping
 const CURRENCY_SYMBOLS = {
   'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥',
@@ -37,10 +46,12 @@ const Income = () => {
     amount: '',
     description: '',
     category: '',
-    date: new Date().toISOString().split('T')[0],
+    date: '',
     notes: ''
   });
   const [submitting, setSubmitting] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [newCategory, setNewCategory] = useState({ name: '', icon: '💼', color: '#10b981' });
 
   // Get currency from user profile
   const currency = user?.profile?.currency || 'INR';
@@ -96,7 +107,7 @@ const Income = () => {
       amount: '',
       description: '',
       category: '',
-      date: new Date().toISOString().split('T')[0],
+      date: getLocalDateString(),
       notes: ''
     });
     setShowModal(true);
@@ -148,6 +159,33 @@ const Income = () => {
       toast.error('Failed to save income');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleCreateCategory = async (e) => {
+    e.preventDefault();
+    if (!newCategory.name.trim()) {
+      toast.error('Please enter a category name');
+      return;
+    }
+
+    try {
+      const response = await authService.createCategory({
+        name: newCategory.name,
+        type: 'income',
+        icon: newCategory.icon,
+        color: newCategory.color
+      });
+      
+      // Add to categories list and select it
+      setCategories([...categories, response]);
+      setFormData({ ...formData, category: response.id.toString() });
+      setShowCategoryModal(false);
+      setNewCategory({ name: '', icon: '💼', color: '#10b981' });
+      toast.success('Category created successfully!');
+    } catch (error) {
+      console.error('Failed to create category:', error);
+      toast.error('Failed to create category');
     }
   };
 
@@ -427,17 +465,27 @@ const Income = () => {
               {/* Source/Category */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Source *</label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  required
-                >
-                  <option value="">Select income source</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
+                <div className="flex gap-2">
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Select income source</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowCategoryModal(true)}
+                    className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors"
+                    title="Add new source"
+                  >
+                    <FiPlus size={20} />
+                  </button>
+                </div>
               </div>
 
               {/* Date */}
@@ -510,6 +558,69 @@ const Income = () => {
                 Delete
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add New Category Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">New Income Source</h3>
+              <button onClick={() => setShowCategoryModal(false)} className="text-gray-400 hover:text-gray-600">
+                <FiX size={24} />
+              </button>
+            </div>
+            <form onSubmit={handleCreateCategory} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Source Name *</label>
+                <input
+                  type="text"
+                  value={newCategory.name}
+                  onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="e.g., Salary, Freelance, Investments"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
+                <input
+                  type="text"
+                  value={newCategory.icon}
+                  onChange={(e) => setNewCategory({ ...newCategory, icon: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="💼"
+                  maxLength={2}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
+                <input
+                  type="color"
+                  value={newCategory.color}
+                  onChange={(e) => setNewCategory({ ...newCategory, color: e.target.value })}
+                  className="w-full h-12 border border-gray-200 rounded-xl cursor-pointer"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryModal(false)}
+                  className="flex-1 py-3 border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-medium hover:shadow-lg transition-all"
+                >
+                  Create
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
