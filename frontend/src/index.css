@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+/* Custom styles */
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold 
+           transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-0.5;
+  }
+  
+  .btn-secondary {
+    @apply bg-white border-2 border-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold 
+           transition-all duration-200 hover:border-indigo-500 hover:text-indigo-500;
+  }
+  
+  .btn-ghost {
+    @apply bg-transparent text-gray-600 px-4 py-2 rounded-lg font-medium 
+           transition-all duration-200 hover:bg-gray-100 hover:text-indigo-500;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent;
+  }
+  
+  .card {
+    @apply bg-white rounded-2xl shadow-lg p-6;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 pl-11 border-2 border-gray-200 rounded-xl bg-gray-50 
+           focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200;
+  }
+}
+
+/* Loading spinner */
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

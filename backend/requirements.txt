@@ -1,0 +1,21 @@
+# Django and Django REST Framework
+Django>=5.0.0
+djangorestframework>=3.14.0
+djangorestframework-simplejwt>=5.3.0
+
+# CORS headers
+django-cors-headers>=4.3.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Google OAuth
+google-auth>=2.25.0
+google-auth-oauthlib>=1.2.0
+google-auth-httplib2>=0.2.0
+
+# Production server
+gunicorn>=21.0.0
+
+# Database (for production - optional)
+# psycopg2-binary>=2.9.9  # Uncomment for PostgreSQL
